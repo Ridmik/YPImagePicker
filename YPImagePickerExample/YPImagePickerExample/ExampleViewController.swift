@@ -174,9 +174,9 @@ class ExampleViewController: UIViewController {
         //
         //config.library.options = options
 
-        config.library.preselectedItems = selectedItems
+//        config.library.preselectedItems = selectedItems
 
-
+        config.library.showLastUploadedImage = false
 		// Customise fonts
 		//config.fonts.menuItemFont = UIFont.systemFont(ofSize: 22.0, weight: .semibold)
 		//config.fonts.pickerTitleFont = UIFont.systemFont(ofSize: 22.0, weight: .black)
