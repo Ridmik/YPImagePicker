@@ -24,6 +24,14 @@ extension YPPermissionCheckable where Self: UIViewController {
             if hasPermission {
                 block()
             }
+            let permissionString: String = hasPermission ? .resultCameraPermissionDenied : .resultCameraPermissionAccepts
+            let dict: [String: Any] = [
+                "event": YPImagePickerEvent.eventCameraViewPermission,
+                "action": [
+                    YPImagePickerAction.action : permissionString,
+                ]
+            ]
+            NotificationCenter.default.post(name: Notification.Name.init(YPImagePicker.analyticsNotificationName), object: nil, userInfo: dict)
         }
     }
     
