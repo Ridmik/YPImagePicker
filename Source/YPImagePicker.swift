@@ -16,6 +16,8 @@ public protocol YPImagePickerDelegate: AnyObject {
 }
 
 open class YPImagePicker: UINavigationController {
+    
+    public static let analyticsNotificationName: String = "YPImagePickerAnalyticsNotification"
       
     open override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         return .portrait

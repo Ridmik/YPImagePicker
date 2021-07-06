@@ -8,7 +8,7 @@
 import Foundation
 
 public enum YPImagePickerEvent: String {
-    case eventOpenGalleryView = "open_gallery_view"
+    case eventGalleryViewPermission = "GalleryView_requires_STORAGE_PERMISSION"
 }
 
 public enum YPImagePickerAction: String {
@@ -16,5 +16,6 @@ public enum YPImagePickerAction: String {
 }
 
 extension String {
-    static let actionOpenGalleryView = "user comes to gallery fragment"
+    static let resultGalleryPermissionDenied = "user denies any permission on gallery fragment"
+    static let resultGalleryPermissionAccepts = "user accepts any permission on gallery fragment"
 }
