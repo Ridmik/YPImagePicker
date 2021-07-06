@@ -234,7 +234,6 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                 strongSelf.initialize()
                 strongSelf.initialized = true
             }
-            print("I should send the notification right now......")
             let permissionString: String = hasPermission ? .resultGalleryPermissionAccepts : .resultGalleryPermissionDenied
             let dict: [String: Any] = [
                 "event": YPImagePickerEvent.eventGalleryViewPermission,
