@@ -10,6 +10,7 @@ import Foundation
 public enum YPImagePickerEvent: String {
     case eventGalleryViewPermission = "GalleryView_requires_STORAGE_PERMISSION"
     case eventCameraViewPermission = "CameraView_requires_PERMISSION"
+    case eventToogleFitAction = "Gallery_tap_tooglefit_btn_to_reset_image_position"
 }
 
 public enum YPImagePickerAction: String {
@@ -25,4 +26,5 @@ public extension String {
     
     static let resultCameraPermissionDenied = "user denies any permission on camera fragment"
     static let resultCameraPermissionAccepts = "user accepts any permission on camera fragment"
+    static let toggleFitAction = "user taps on the toggle fit button in gallery fragment"
 }
