@@ -106,7 +106,7 @@ class YPAssetViewContainer: UIView {
         let dict: [String: Any] = [
             "event": YPImagePickerEvent.eventToogleFitAction,
             "action": [
-                YPImagePickerAction.action : .toggleFitAction,
+                YPImagePickerAction.action : String.toggleFitAction,
             ]
         ]
         NotificationCenter.default.post(name: Notification.Name.init(YPImagePicker.analyticsNotificationName), object: nil, userInfo: dict)
