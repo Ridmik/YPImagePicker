@@ -13,9 +13,12 @@ public enum YPImagePickerEvent: String {
 
 public enum YPImagePickerAction: String {
     case action
+    case source
 }
 
-extension String {
+public extension String {
     static let resultGalleryPermissionDenied = "user denies any permission on gallery fragment"
     static let resultGalleryPermissionAccepts = "user accepts any permission on gallery fragment"
+    
+    static let sourceFeed = "Feed Screen"
 }
