@@ -107,6 +107,13 @@ final class YPAssetViewContainer: UIView {
             shouldCropToSquare = (z >= 1 && z < zoomableView.squaredZoomScale)
 //        }
         zoomableView.fitImage(shouldCropToSquare, animated: true)
+        let dict: [String: Any] = [
+            "event": YPImagePickerEvent.eventToogleFitAction,
+            "action": [
+                YPImagePickerAction.action : String.toggleFitAction,
+            ]
+        ]
+        NotificationCenter.default.post(name: Notification.Name.init(YPImagePicker.analyticsNotificationName), object: nil, userInfo: dict)
     }
     
     public func refreshSquareCropButton() {

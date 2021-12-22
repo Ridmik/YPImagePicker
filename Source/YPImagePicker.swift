@@ -16,6 +16,8 @@ public protocol YPImagePickerDelegate: AnyObject {
 }
 
 open class YPImagePicker: UINavigationController {
+
+    public static let analyticsNotificationName: String = "YPImagePickerAnalyticsNotification"
     public typealias DidFinishPickingCompletion = (_ items: [YPMediaItem], _ cancelled: Bool) -> Void
 
     // MARK: - Public
