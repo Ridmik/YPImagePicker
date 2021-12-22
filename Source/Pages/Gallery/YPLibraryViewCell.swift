@@ -57,6 +57,19 @@ class YPLibraryViewCell: UICollectionViewCell {
     
     var representedAssetIdentifier: String!
     let imageView = UIImageView()
+    
+    @available(iOS 13.0, *)
+    lazy var videoIconLabel: UILabel = {
+        let label = UILabel()
+        
+        let imageAttachment = NSTextAttachment()
+        imageAttachment.image = UIImage(systemName: "video.fill")?.withTintColor(.white)
+        let fullString = NSAttributedString(attachment: imageAttachment)
+        label.attributedText = fullString
+        
+        return label
+    }()
+    
     let durationLabel = UILabel()
     let selectionOverlay = UIView()
     let multipleSelectionIndicator = YPMultipleSelectionIndicator()
@@ -65,12 +78,22 @@ class YPLibraryViewCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        subviews(
-            imageView,
-            durationLabel,
-            selectionOverlay,
-            multipleSelectionIndicator
-        )
+        if #available(iOS 13.0, *) {
+            subviews(
+                imageView,
+                videoIconLabel,
+                durationLabel,
+                selectionOverlay,
+                multipleSelectionIndicator
+            )
+        } else {
+            subviews(
+                imageView,
+                durationLabel,
+                selectionOverlay,
+                multipleSelectionIndicator
+            )
+        }
 
         imageView.fillContainer()
         selectionOverlay.fillContainer()
@@ -84,8 +107,18 @@ class YPLibraryViewCell: UICollectionViewCell {
             multipleSelectionIndicator-3-|
         )
         
+        if #available(iOS 13.0, *) {
+            layout(
+                |-5-videoIconLabel,
+                  5
+            )
+        }
+        
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
+        if #available(iOS 13.0, *) {
+            videoIconLabel.isHidden = true
+        }
         durationLabel.textColor = .white
         durationLabel.font = YPConfig.fonts.durationFont
         durationLabel.isHidden = true

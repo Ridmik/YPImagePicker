@@ -132,6 +132,9 @@ extension YPLibraryVC: UICollectionViewDelegate {
         }
         
         let isVideo = (asset.mediaType == .video)
+        if #available(iOS 13.0, *) {
+            cell.videoIconLabel.isHidden = !isVideo
+        }
         cell.durationLabel.isHidden = !isVideo
         cell.durationLabel.text = isVideo ? YPHelper.formattedStrigFrom(asset.duration) : ""
         cell.multipleSelectionIndicator.isHidden = !multipleSelectionEnabled
