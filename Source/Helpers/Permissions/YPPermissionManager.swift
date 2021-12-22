@@ -14,13 +14,13 @@ internal struct YPPermissionManager {
     static func checkLibraryPermissionAndAskIfNeeded(sourceVC: UIViewController,
                                                      completion: @escaping YPPermissionManagerCompletion) {
         var status: PHAuthorizationStatus
-
+        
         if #available(iOS 14, *) {
             status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         } else {
             status = PHPhotoLibrary.authorizationStatus()
         }
-
+        
         switch status {
         case .authorized:
             completion(true)
@@ -36,13 +36,17 @@ internal struct YPPermissionManager {
             if #available(iOS 14, *) {
                 PHPhotoLibrary.requestAuthorization(for: .readWrite) { s in
                     DispatchQueue.main.async {
-                        completion(s == .authorized || s == .limited)
+                        let hasPermission = (s == .authorized || s == .limited)
+                        completion(hasPermission)
+                        postGalleryPermissionAskingNotification(hasPermission: hasPermission)
                     }
                 }
             } else {
                 PHPhotoLibrary.requestAuthorization { s in
                     DispatchQueue.main.async {
-                        completion(s == .authorized)
+                        let hasPermission = s == .authorized
+                        completion(hasPermission)
+                        postGalleryPermissionAskingNotification(hasPermission: hasPermission)
                     }
                 }
             }
@@ -68,10 +72,33 @@ internal struct YPPermissionManager {
             AVCaptureDevice.requestAccess(for: type) { granted in
                 DispatchQueue.main.async {
                     completion(granted)
+                    postCameraPermissionAskingNotification(hasPermission: granted)
                 }
             }
         @unknown default:
             ypLog("Bug. Write to developers please.")
         }
+    }
+    
+    private static func postGalleryPermissionAskingNotification(hasPermission: Bool) {
+        let permissionString: String = hasPermission ? .resultGalleryPermissionAccepts : .resultGalleryPermissionDenied
+        let dict: [String: Any] = [
+            "event": YPImagePickerEvent.eventGalleryViewPermission,
+            "action": [
+                YPImagePickerAction.action : permissionString,
+            ]
+        ]
+        NotificationCenter.default.post(name: Notification.Name.init(YPImagePicker.analyticsNotificationName), object: nil, userInfo: dict)
+    }
+    
+    private static func postCameraPermissionAskingNotification(hasPermission: Bool) {
+        let permissionString: String = hasPermission ? .resultCameraPermissionAccepts : .resultCameraPermissionDenied
+        let dict: [String: Any] = [
+            "event": YPImagePickerEvent.eventCameraViewPermission,
+            "action": [
+                YPImagePickerAction.action : permissionString,
+            ]
+        ]
+        NotificationCenter.default.post(name: Notification.Name.init(YPImagePicker.analyticsNotificationName), object: nil, userInfo: dict)
     }
 }
