@@ -18,6 +18,7 @@ public class YPVideoView: UIView {
     internal let playerView = UIView()
     internal let playerLayer = AVPlayerLayer()
     internal var previewImageView = UIImageView()
+    internal let muteButton = UIButton()
     
     public var player: AVPlayer {
         guard let player = playerLayer.player else {
@@ -55,13 +56,29 @@ public class YPVideoView: UIView {
         subviews(
             previewImageView,
             playerView,
-            playImageView
+            playImageView,
+            muteButton
+        )
+        
+        layout(
+            muteButton.size(42)-16-|,
+            16
         )
         
         previewImageView.fillContainer()
         playerView.fillContainer()
         playImageView.centerInContainer()
         playerView.layer.addSublayer(playerLayer)
+        if #available(iOS 13.0, *) {
+            let configuration = UIImage.SymbolConfiguration(pointSize: 30)
+            muteButton.setImage(UIImage(systemName: "speaker.slash.circle.fill", withConfiguration: configuration), for: .normal)
+            muteButton.setImage(UIImage(systemName: "speaker.wave.2.circle.fill", withConfiguration: configuration), for: .selected)
+        } else {
+            muteButton.setTitle("Unmute", for: .normal)
+            muteButton.setTitle("Mute", for: .selected)
+        }
+        muteButton.tintColor = .systemGray
+        muteButton.addTarget(self, action: #selector(muteUnmuteButtonTapped(_:)), for: .touchUpInside)
     }
     
     override public func layoutSubviews() {
@@ -71,6 +88,11 @@ public class YPVideoView: UIView {
     
     @objc internal func singleTap() {
         pauseUnpause()
+    }
+    
+    @objc internal func muteUnmuteButtonTapped(_ sender: UIButton) {
+        sender.isSelected.toggle()
+        muteUnmute()
     }
     
     @objc public func playerItemDidReachEnd(_ note: Notification) {
