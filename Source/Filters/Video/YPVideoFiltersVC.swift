@@ -110,6 +110,7 @@ public final class YPVideoFiltersVC: UIViewController, IsMediaFilterVC {
         
         selectTrim()
         videoView.loadVideo(inputVideo)
+        videoView.stop()    // fixes play button not visible initially
 
         super.viewDidAppear(animated)
     }
