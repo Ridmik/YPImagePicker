@@ -77,7 +77,7 @@ public class YPVideoView: UIView {
             muteButton.setTitle("Unmute", for: .normal)
             muteButton.setTitle("Mute", for: .selected)
         }
-        muteButton.tintColor = .systemGray
+        muteButton.tintColor = UIColor.black.withAlphaComponent(0.5)
         muteButton.addTarget(self, action: #selector(muteUnmuteButtonTapped(_:)), for: .touchUpInside)
     }
     
