@@ -11,14 +11,22 @@ import AVFoundation
 // MARK: Trim
 
 extension AVAsset {
-    func assetByTrimming(startTime: CMTime, endTime: CMTime) throws -> AVAsset {
+    func assetByTrimming(startTime: CMTime, endTime: CMTime, isAudioMuted: Bool = false) throws -> AVAsset {
         let timeRange = CMTimeRangeFromTimeToTime(start: startTime, end: endTime)
         let composition = AVMutableComposition()
         do {
             for track in tracks {
-                let compositionTrack = composition.addMutableTrack(withMediaType: track.mediaType,
-                                                                   preferredTrackID: track.trackID)
-                try compositionTrack?.insertTimeRange(timeRange, of: track, at: CMTime.zero)
+                if track.mediaType == .audio {
+                    if !isAudioMuted {
+                        let compositionTrack = composition.addMutableTrack(withMediaType: track.mediaType,
+                                                                           preferredTrackID: track.trackID)
+                        try compositionTrack?.insertTimeRange(timeRange, of: track, at: CMTime.zero)
+                    }
+                } else {
+                    let compositionTrack = composition.addMutableTrack(withMediaType: track.mediaType,
+                                                                       preferredTrackID: track.trackID)
+                    try compositionTrack?.insertTimeRange(timeRange, of: track, at: CMTime.zero)
+                }
             }
         } catch let error {
             throw YPTrimError("Error during composition", underlyingError: error)
