@@ -17,7 +17,9 @@ internal final class YPPhotoCaptureHelper: NSObject {
         return deviceInput?.device
     }
     var hasFlash: Bool {
-        return device?.hasFlash ?? false
+        let isFrontCamera = device?.position == .front
+        let deviceHasFlash = device?.hasFlash ?? false
+        return !isFrontCamera && deviceHasFlash
     }
     
     private let sessionQueue = DispatchQueue(label: "YPPhotoCaptureHelperQueue", qos: .background)
@@ -118,24 +120,9 @@ extension YPPhotoCaptureHelper {
 }
 
 extension YPPhotoCaptureHelper: AVCapturePhotoCaptureDelegate {
-    @available(iOS 11.0, *)
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard let data = photo.fileDataRepresentation() else { return }
         block?(data)
-    }
-    
-    func photoOutput(_ output: AVCapturePhotoOutput,
-                     didFinishProcessingPhoto photoSampleBuffer: CMSampleBuffer?,
-                     previewPhoto previewPhotoSampleBuffer: CMSampleBuffer?,
-                     resolvedSettings: AVCaptureResolvedPhotoSettings,
-                     bracketSettings: AVCaptureBracketedStillImageSettings?,
-                     error: Error?) {
-        guard let buffer = photoSampleBuffer else { return }
-        if let data = AVCapturePhotoOutput
-            .jpegPhotoDataRepresentation(forJPEGSampleBuffer: buffer,
-                                         previewPhotoSampleBuffer: previewPhotoSampleBuffer) {
-            block?(data)
-        }
     }
 }
 
@@ -185,7 +172,7 @@ private extension YPPhotoCaptureHelper {
         session.beginConfiguration()
         session.sessionPreset = .photo
         let cameraPosition: AVCaptureDevice.Position = YPConfig.usesFrontCamera ? .front : .back
-        let aDevice = deviceForPosition(cameraPosition)
+        let aDevice = AVCaptureDevice.deviceForPosition(cameraPosition)
         if let d = aDevice {
             deviceInput = try? AVCaptureDeviceInput(device: d)
         }

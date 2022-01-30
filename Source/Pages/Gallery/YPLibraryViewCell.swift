@@ -20,7 +20,7 @@ class YPMultipleSelectionIndicator: UIView {
         
         let size: CGFloat = 20
         
-        subviews(
+        sv(
             circle,
             label
         )
@@ -79,7 +79,7 @@ class YPLibraryViewCell: UICollectionViewCell {
         super.init(frame: frame)
         
         if #available(iOS 13.0, *) {
-            subviews(
+            sv(
                 imageView,
                 videoIconLabel,
                 durationLabel,
@@ -87,7 +87,7 @@ class YPLibraryViewCell: UICollectionViewCell {
                 multipleSelectionIndicator
             )
         } else {
-            subviews(
+            sv(
                 imageView,
                 durationLabel,
                 selectionOverlay,
