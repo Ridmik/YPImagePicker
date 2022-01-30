@@ -16,7 +16,7 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
     internal var isProcessing = false // true if video or image is in processing state
     internal var selectedItems = [YPLibrarySelection]()
     internal let mediaManager = LibraryMediaManager()
-    internal var multipleSelectionEnabled = false
+    internal var isMultipleSelectionEnabled = false
     internal var currentlySelectedIndex: Int = 0
     internal let panGestureHelper = PanGestureHelper()
     internal var isInitialized = false
@@ -75,7 +75,7 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
                 // The negative index will be corrected in the collectionView:cellForItemAt:
                 return YPLibrarySelection(index: -1, assetIdentifier: asset.localIdentifier)
             }
-            v.assetViewContainer.setMultipleSelectionMode(on: multipleSelectionEnabled)
+            v.assetViewContainer.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
             v.collectionView.reloadData()
         }
 
@@ -84,7 +84,7 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
         }
 
         if YPConfig.library.defaultMultipleSelection || selectedItems.count > 1 {
-            showMultipleSelection()
+            toggleMultipleSelection()
         }
     }
 
@@ -92,7 +92,7 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
         title = album.title
         mediaManager.collection = album.collection
         currentlySelectedIndex = 0
-        if !multipleSelectionEnabled {
+        if !isMultipleSelectionEnabled {
             selectedItems.removeAll()
         }
         refreshMediaRequest()
@@ -171,26 +171,28 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
         }
 
         doAfterLibraryPermissionCheck { [weak self] in
-            if self?.multipleSelectionEnabled == false {
+            if self?.isMultipleSelectionEnabled == false {
                 self?.selectedItems.removeAll()
             }
-            self?.showMultipleSelection()
+            self?.toggleMultipleSelection()
         }
     }
     
-    func showMultipleSelection() {
+    func toggleMultipleSelection() {
         // Prevent desactivating multiple selection when using `minNumberOfItems`
-        if YPConfig.library.minNumberOfItems > 1 && multipleSelectionEnabled {
+        if YPConfig.library.minNumberOfItems > 1 && isMultipleSelectionEnabled {
+            print("Selected minNumberOfItems greater than one :\(YPConfig.library.minNumberOfItems). Don't deselecting multiple selection.")
             return
         }
-        
-        multipleSelectionEnabled = !multipleSelectionEnabled
-        
-        if multipleSelectionEnabled {
-            if selectedItems.isEmpty && YPConfig.library.preSelectItemOnMultipleSelection,
-				delegate?.libraryViewShouldAddToSelection(indexPath: IndexPath(row: currentlySelectedIndex, section: 0),
-														  numSelections: selectedItems.count) ?? true {
-                let asset = mediaManager.fetchResult[currentlySelectedIndex]
+
+        isMultipleSelectionEnabled.toggle()
+
+        if isMultipleSelectionEnabled {
+            let needPreselectItemsAndNotSelectedAnyYet = selectedItems.isEmpty && YPConfig.library.preSelectItemOnMultipleSelection
+            let shouldSelectByDelegate = delegate?.libraryViewShouldAddToSelection(indexPath: IndexPath(row: currentlySelectedIndex, section: 0), numSelections: selectedItems.count) ?? true
+            if needPreselectItemsAndNotSelectedAnyYet,
+               shouldSelectByDelegate,
+               let asset = mediaManager.getAsset(at: currentlySelectedIndex) {
                 selectedItems = [
                     YPLibrarySelection(index: currentlySelectedIndex,
                                        cropRect: v.currentCropRect(),
@@ -204,10 +206,10 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
             addToSelection(indexPath: IndexPath(row: currentlySelectedIndex, section: 0))
         }
         
-        v.assetViewContainer.setMultipleSelectionMode(on: multipleSelectionEnabled)
+        v.assetViewContainer.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
         v.collectionView.reloadData()
         checkLimit()
-        delegate?.libraryViewDidToggleMultipleSelection(enabled: multipleSelectionEnabled)
+        delegate?.libraryViewDidToggleMultipleSelection(enabled: isMultipleSelectionEnabled)
     }
     
     // MARK: - Tap Preview
@@ -235,27 +237,18 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
             mediaManager.fetchResult = PHAsset.fetchAssets(with: options)
         }
         
-        if mediaManager.hasResultItems {
-            if !YPConfig.library.showLastUploadedImage {
-                changeAsset(mediaManager.fetchResult[1])
-                v.collectionView.reloadData()
-                v.collectionView.selectItem(at: IndexPath(row: 1, section: 0),
-                                                 animated: false,
-                                                 scrollPosition: UICollectionView.ScrollPosition())
-                if !multipleSelectionEnabled && YPConfig.library.preSelectItemOnMultipleSelection {
-                    addToSelection(indexPath: IndexPath(row: 1, section: 0))
-                }
-            } else {
-                changeAsset(mediaManager.fetchResult[0])
-                v.collectionView.reloadData()
-                v.collectionView.selectItem(at: IndexPath(row: 0, section: 0),
-                                                 animated: false,
-                                                 scrollPosition: UICollectionView.ScrollPosition())
-                if !multipleSelectionEnabled && YPConfig.library.preSelectItemOnMultipleSelection {
-                    addToSelection(indexPath: IndexPath(row:0, section: 0))
-                }
+        let assetIndex = YPConfig.library.showLastUploadedImage ? 0 : 1
+        
+        if mediaManager.hasResultItems,
+        let firstAsset = mediaManager.getAsset(at: assetIndex) {
+            changeAsset(firstAsset)
+            v.collectionView.reloadData()
+            v.collectionView.selectItem(at: IndexPath(row: assetIndex, section: 0),
+                                        animated: false,
+                                        scrollPosition: UICollectionView.ScrollPosition())
+            if !isMultipleSelectionEnabled && YPConfig.library.preSelectItemOnMultipleSelection {
+                addToSelection(indexPath: IndexPath(row: assetIndex, section: 0))
             }
- 
         } else {
             delegate?.libraryViewHaveNoItems()
         }
@@ -288,12 +281,17 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
         }
     }
     
-    func changeAsset(_ asset: PHAsset) {
+    func changeAsset(_ asset: PHAsset?) {
+        guard let asset = asset else {
+            print("No asset to change.")
+            return
+        }
+
         delegate?.libraryViewStartedLoadingImage()
         
         let completion = { (isLowResIntermediaryImage: Bool) in
             self.v.hideOverlayView()
-            self.v.assetViewContainer.refreshSquareCropButton()
+            self.v.assetViewContainer.updateSquareCropButtonState()
             self.updateCropInfo()
             if !isLowResIntermediaryImage {
                 self.v.hideLoader()
@@ -372,7 +370,7 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
     }
     
     internal func fetchStoredCrop() -> YPLibrarySelection? {
-        if self.multipleSelectionEnabled,
+        if self.isMultipleSelectionEnabled,
             self.selectedItems.contains(where: { $0.index == self.currentlySelectedIndex }) {
             guard let selectedAssetIndex = self.selectedItems
                 .firstIndex(where: { $0.index == self.currentlySelectedIndex }) else {
@@ -452,7 +450,7 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
             }
             
             // Multiple selection
-            if self.multipleSelectionEnabled && self.selectedItems.count > 1 {
+            if self.isMultipleSelectionEnabled && self.selectedItems.count > 1 {
                 
                 // Check video length
                 for asset in selectedAssets {
