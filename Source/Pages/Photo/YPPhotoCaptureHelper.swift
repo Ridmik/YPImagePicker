@@ -38,6 +38,8 @@ internal final class YPPhotoCaptureHelper: NSObject {
 
 extension YPPhotoCaptureHelper {
     func shoot(completion: @escaping (Data) -> Void) {
+        guard let device = device, device.isConnected else { return }
+        
         block = completion
         
         // Set current device orientation
