@@ -13,8 +13,8 @@ import AVFoundation
 // MARK: - Global functions
 
 
-internal func flippedDeviceInputForInput(_ input: AVCaptureDeviceInput) -> AVCaptureDeviceInput? {
-    let position: AVCaptureDevice.Position = (input.device.position == .front) ? .back : .front
+internal func flippedDeviceInputForInput(_ input: AVCaptureDeviceInput?) -> AVCaptureDeviceInput? {
+    let position: AVCaptureDevice.Position = (input?.device.position == .front) ? .back : .front
     guard let aDevice = AVCaptureDevice.deviceForPosition(position) else {
         return nil
     }

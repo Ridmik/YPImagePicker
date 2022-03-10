@@ -143,11 +143,12 @@ private extension YPPhotoCaptureHelper {
             }
         }
         
-        // Catpure Highest Quality possible.
-        settings.isHighResolutionPhotoEnabled = true
-        
         // Set flash mode.
         if let deviceInput = deviceInput {
+            if deviceInput.device.position == .back {
+                // Catpure Highest Quality possible.
+                settings.isHighResolutionPhotoEnabled = true
+            }
             if deviceInput.device.isFlashAvailable {
                 let supportedFlashModes = photoOutput.__supportedFlashModes
                 switch currentFlashMode {
@@ -170,6 +171,21 @@ private extension YPPhotoCaptureHelper {
         return settings
     }
     
+    private func setupCaptureSessionInputOutput() {
+        guard let videoInput = deviceInput else { return }
+        if session.canAddInput(videoInput) {
+            session.addInput(videoInput)
+        }
+        if session.canAddOutput(photoOutput) {
+            session.addOutput(photoOutput)
+            if videoInput.device.position == .back {
+                photoOutput.isHighResolutionCaptureEnabled = true
+            }
+            // Improve capture time by preparing output with the desired settings.
+            photoOutput.setPreparedPhotoSettingsArray([photoCaptureSettings()], completionHandler: nil)
+        }
+    }
+    
     private func setupCaptureSession() {
         session.beginConfiguration()
         session.sessionPreset = .photo
@@ -178,17 +194,7 @@ private extension YPPhotoCaptureHelper {
         if let d = aDevice {
             deviceInput = try? AVCaptureDeviceInput(device: d)
         }
-        if let videoInput = deviceInput {
-            if session.canAddInput(videoInput) {
-                session.addInput(videoInput)
-            }
-            if session.canAddOutput(photoOutput) {
-                session.addOutput(photoOutput)
-                photoOutput.isHighResolutionCaptureEnabled = true
-                // Improve capture time by preparing output with the desired settings.
-                photoOutput.setPreparedPhotoSettingsArray([photoCaptureSettings()], completionHandler: nil)
-            }
-        }
+        setupCaptureSessionInputOutput()
         session.commitConfiguration()
         isCaptureSessionSetup = true
     }
@@ -232,13 +238,11 @@ private extension YPPhotoCaptureHelper {
     }
     
     private func flip() {
+        session.beginConfiguration()
         session.resetInputs()
-        guard let di = deviceInput else { return }
-        deviceInput = flippedDeviceInputForInput(di)
-        guard let deviceInput = deviceInput else { return }
-        if session.canAddInput(deviceInput) {
-            session.addInput(deviceInput)
-        }
+        deviceInput = flippedDeviceInputForInput(deviceInput)
+        setupCaptureSessionInputOutput()
+        session.commitConfiguration()
     }
     
     private func setCurrentOrienation() {
