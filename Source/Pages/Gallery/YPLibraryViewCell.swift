@@ -20,7 +20,7 @@ class YPMultipleSelectionIndicator: UIView {
         
         let size: CGFloat = 20
         
-        sv(
+        subviews(
             circle,
             label
         )
